@@ -45,7 +45,7 @@ h1 { margin: 0; font-size: clamp(22px, 3vw, 32px); font-weight: 800; letter-spac
 <div class="wrap">
   <header>
     <h1>NØK BASKETBALL · UNIT 6</h1>
-    <div class="meta"><span class="cap">3D massing model</span> · Rev 3 · schematic, not for construction</div> <a class="dl" href="nok-unit6-floorplan.pdf" download>Download 2D floorplan (PDF)</a>
+    <div class="meta"><span class="cap">3D massing model</span> · Rev 4 · 21 Oct 2026 · schematic, not for construction</div> <a class="dl" href="nok-unit6-floorplan.pdf" download>Download 2D floorplan (PDF)</a>
   </header>
 
   <div class="toolbar" role="toolbar" aria-label="Camera views">
@@ -74,7 +74,7 @@ h1 { margin: 0; font-size: clamp(22px, 3vw, 32px); font-weight: 800; letter-spac
     <div class="fact"><b>13'6"</b><span>front block: washrooms, lobby, change area</span></div>
     <div class="fact"><b>+10'4"</b><span>viewing deck, office over the washrooms</span></div>
   </div>
-  <p class="note">Built from the Unit 6 layout (Rev 3), with the stair moved to the far corner, benches in the lobby, a black rubber lobby floor and a 4' chain-link divider. Building dimensions are from the 28 Jun site measure and still need a laser survey. Roof structure, ducts, lights, finishes and the hoop 1 frame are placeholders until the architect and engineer design them.</p>
+  <p class="note">Built from the Unit 6 layout (Rev 4). Building dimensions are from the 28 Jun site measure and still need a laser survey. Roof structure, ducts, lights, finishes and the hoop 1 frame are placeholders until the architect and engineer design them.</p>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
@@ -89,7 +89,7 @@ h1 { margin: 0; font-size: clamp(22px, 3vw, 32px); font-weight: 800; letter-spac
 
   // Units are feet. x runs from the street wall (0) to the back wall (108); z from the top side wall (0) to the bottom side wall (64).
   const W = 108, D = 64, H = 19, DECK = 10.33, FB = 13.5, PI = Math.PI;
-  const STAIR_Z0 = 44.4, STAIR_Z1 = 60, GATE = [16.5, 21.5];
+  const STAIR_Z0 = 44.4, STAIR_Z1 = 60, GATE = [16.5, 21.5], GATE2 = [51, 56];
 
   const renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -199,16 +199,18 @@ h1 { margin: 0; font-size: clamp(22px, 3vw, 32px); font-weight: 800; letter-spac
     }
   }
   const lw = 0.17, ly = 0.03, tw = 0.12, ty = 0.022;
-  seg(18.75, 10, 102.75, 10, lw, M.black, ly); seg(18.75, 60, 102.75, 60, lw, M.black, ly);
-  seg(18.75, 10, 18.75, 60, lw, M.black, ly); seg(102.75, 10, 102.75, 60, lw, M.black, ly);
-  seg(60.75, 10, 60.75, 60, lw, M.black, ly); arc(60.75, 35, 6, 0, 2 * PI, lw, M.black, ly);
+  // Main court 84' x 50': 4' clear at the top wall (bulkheads), 10' bench side at the bottom wall
+  const C0 = 4, C1 = 54, CZ = 29;
+  seg(18.75, C0, 102.75, C0, lw, M.black, ly); seg(18.75, C1, 102.75, C1, lw, M.black, ly);
+  seg(18.75, C0, 18.75, C1, lw, M.black, ly); seg(102.75, C0, 102.75, C1, lw, M.black, ly);
+  seg(60.75, C0, 60.75, C1, lw, M.black, ly); arc(60.75, CZ, 6, 0, 2 * PI, lw, M.black, ly);
   [[18.75, 37.75, 1], [102.75, 83.75, -1]].forEach(([base, ft, s]) => {
     const a0 = s > 0 ? -PI / 2 : PI / 2, a1 = s > 0 ? PI / 2 : 3 * PI / 2;
-    seg(base, 29, ft, 29, lw, M.black, ly); seg(base, 41, ft, 41, lw, M.black, ly); seg(ft, 29, ft, 41, lw, M.black, ly);
-    arc(ft, 35, 6, a0, a1, lw, M.black, ly);
+    seg(base, CZ - 6, ft, CZ - 6, lw, M.black, ly); seg(base, CZ + 6, ft, CZ + 6, lw, M.black, ly); seg(ft, CZ - 6, ft, CZ + 6, lw, M.black, ly);
+    arc(ft, CZ, 6, a0, a1, lw, M.black, ly);
     const rim = base + s * 5.25;
-    seg(base, 15.25, rim, 15.25, lw, M.black, ly); seg(base, 54.75, rim, 54.75, lw, M.black, ly);
-    arc(rim, 35, 19.75, a0, a1, lw, M.black, ly);
+    seg(base, CZ - 19.75, rim, CZ - 19.75, lw, M.black, ly); seg(base, CZ + 19.75, rim, CZ + 19.75, lw, M.black, ly);
+    arc(rim, CZ, 19.75, a0, a1, lw, M.black, ly);
   });
   [[15.75, 60.75, 38.25], [60.75, 105.75, 83.25]].forEach(([a, b, h]) => {
     seg(a, 4, b, 4, tw, M.blue, ty); seg(a, 64, b, 64, tw, M.blue, ty); seg(a, 4, a, 64, tw, M.blue, ty); seg(b, 4, b, 64, tw, M.blue, ty);
@@ -227,7 +229,7 @@ h1 { margin: 0; font-size: clamp(22px, 3vw, 32px); font-weight: 800; letter-spac
     g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('NØK', 256, 266);
     const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding;
     const m = new THREE.Mesh(new THREE.CircleGeometry(4.2, 64), new THREE.MeshStandardMaterial({ map: t, transparent: true, roughness: .4 }));
-    m.rotation.x = -PI / 2; m.rotation.z = -PI / 2; m.position.set(60.75, 0.035, 35); m.receiveShadow = true; scene.add(m);
+    m.rotation.x = -PI / 2; m.rotation.z = -PI / 2; m.position.set(60.75, 0.035, CZ); m.receiveShadow = true; scene.add(m);
   })();
 
   // ---------- Shell: two-tone walls, cut away on the camera side ----------
@@ -242,10 +244,16 @@ h1 { margin: 0; font-size: clamp(22px, 3vw, 32px); font-weight: 800; letter-spac
   shell(-T, 0, 0, 25, walls.street); shell(-T, 0, 28, D, walls.street); shell(-T, 0, 25, 28, walls.street, 7.3);
   box(-T - .05, .05, 7.1, 7.4, 24.8, 28.2, M.steel, walls.street); box(-T - .05, .05, 0, 7.4, 24.8, 25, M.steel, walls.street); box(-T - .05, .05, 0, 7.4, 28, 28.2, M.steel, walls.street);
   box(-0.5, -0.38, 0, 7.1, 25, 28, M.glass, walls.street);
-  shell(W, W + T, 0, D, walls.back);
+  // Rear exit: 3' outswing door near the middle of the back wall, just clear of hoop 2's frame
+  const EX = [32.5, 35.5];
+  shell(W, W + T, 0, EX[0], walls.back); shell(W, W + T, EX[1], D, walls.back); shell(W, W + T, EX[0], EX[1], walls.back, 7.3);
+  box(W - .05, W + T + .05, 7.1, 7.4, EX[0] - .2, EX[1] + .2, M.steel, walls.back);
+  box(W - .05, W + T + .05, 0, 7.4, EX[0] - .2, EX[0], M.steel, walls.back); box(W - .05, W + T + .05, 0, 7.4, EX[1], EX[1] + .2, M.steel, walls.back);
+  box(W + .2, W + .4, 0, 7.1, EX[0], EX[1], mat('#3B3E42', { roughness: .5, metalness: .4 }), walls.back);
+  box(W - .3, W - .05, 7.7, 8.4, 33.3, 34.7, new THREE.MeshBasicMaterial({ color: '#2FBF5B' }), walls.back, false);
   shell(-T, W + T, -T, 0, walls.top);
   shell(-T, W + T, D, D + T, walls.bottom);
-  box(W - 0.35, W, 0, 6, 8, 62, M.pad, walls.back);
+  box(W - 0.35, W, 0, 6, 2, EX[0] - .3, M.pad, walls.back); box(W - 0.35, W, 0, 6, EX[1] + .3, 56, M.pad, walls.back);
 
   // ---------- Ground floor front block ----------
   const lower = new THREE.Group(); scene.add(lower);
@@ -262,7 +270,7 @@ h1 { margin: 0; font-size: clamp(22px, 3vw, 32px); font-weight: 800; letter-spac
   [[8, 8.5], [11, 12], [14.5, 15]].forEach(([a, b]) => box(6.5 - t2 / 2, 6.5 + t2 / 2, 0, RH, a, b, M.tileWall, lower));
   box(6.5 - t2 / 2, 6.5 + t2 / 2, 7.2, RH, 8, 15, M.tileWall, lower);
   box(FB - t2, FB, 0, RH, 0, 15, M.charcoal, lower);                             // court face of washrooms
-  box(FB - 0.02, FB + 0.3, 0, 6, 8, 15, M.pad, lower);
+  box(FB - 0.02, FB + 0.3, 0, 6, 4, 15, M.pad, lower);
   // fixtures and doors
   box(1.4, 3.6, 0, 1.4, 0.4, 2.0, M.fixture, lower);
   box(1.4, 3.0, 2.6, 3.0, 3.4, 5.4, M.fixture, lower);
@@ -283,7 +291,7 @@ h1 { margin: 0; font-size: clamp(22px, 3vw, 32px); font-weight: 800; letter-spac
   strut([4.0, 3.2, STAIR_Z0], [4.0, DECK + 3.2, STAIR_Z1], 0.12, M.steel, lower);
   for (let i = 0; i <= 4; i++) { const z = STAIR_Z0 + i * (STAIR_Z1 - STAIR_Z0) / 4, y = i * DECK / 4; box(3.95, 4.05, y + 0.2, y + 3.2, z - .05, z + .05, M.steel, lower, false); }
   // deck columns, padded
-  [21, 35, 49].forEach(z => { box(FB - 0.5, FB, 0, DECK - 0.9, z - 0.25, z + 0.25, M.steel, lower); box(FB - 0.85, FB + 0.35, 0, 6, z - 0.6, z + 0.6, M.pad, lower); });
+  [15.6, 29, 42].forEach(z => { box(FB - 0.5, FB, 0, DECK - 0.9, z - 0.25, z + 0.25, M.steel, lower); box(FB - 0.85, FB + 0.35, 0, 6, z - 0.6, z + 0.6, M.pad, lower); });
 
   // 4' chain-link divider between lobby and court, with a 5' opening by the washrooms
   function chainTexture() {
@@ -304,7 +312,32 @@ h1 { margin: 0; font-size: clamp(22px, 3vw, 32px); font-weight: 800; letter-spac
     const n = Math.ceil(L / 8);
     for (let i = 0; i <= n; i++) box(FB + 0.37, FB + 0.53, 0, 4.1, z1 + i * L / n - .08, z1 + i * L / n + .08, M.galv, scene, false);
   }
-  fence(15, GATE[0]); fence(GATE[1], D);
+  fence(15, GATE[0]); fence(GATE[1], GATE2[0]);
+
+  // Equipment cage under the stair top and landing: 8' x 13.5', mesh to the deck, double doors to the court
+  function meshPanel(alongZ, c, a1, a2, y1, y2) {
+    const L = a2 - a1, h = y2 - y1, t = chainBase.clone(); t.needsUpdate = true; t.repeat.set(L / 0.45, h / 0.45);
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(L, h), new THREE.MeshStandardMaterial({ map: t, transparent: true, alphaTest: .35, side: THREE.DoubleSide, roughness: .4, metalness: .7 }));
+    if (alongZ) { mesh.rotation.y = PI / 2; mesh.position.set(c, (y1 + y2) / 2, (a1 + a2) / 2); }
+    else mesh.position.set((a1 + a2) / 2, (y1 + y2) / 2, c);
+    mesh.castShadow = true; scene.add(mesh);
+  }
+  const CG = GATE2[1], CH = DECK - 0.9, CF = FB + 0.45;
+  meshPanel(true, CF, CG, D, 0, CH);
+  meshPanel(false, CG, 4, CF, 0, CH);
+  meshPanel(false, CG, 0, 4, 0, 7.1);
+  [[CF, CG], [CF, D - .1], [4, CG]].forEach(([x, z]) => box(x - .1, x + .1, 0, CH, z - .1, z + .1, M.steel));
+  box(CF - .1, CF + .1, 7.4, 7.6, 57, 63, M.steel); [57, 60, 63].forEach(z => box(CF - .08, CF + .08, 0, 7.6, z - .07, z + .07, M.steel));
+  box(CF - .1, CF + .1, CH - .2, CH, CG, D, M.steel, scene, false);
+  const ball = mat('#C8642F', { roughness: .8 });
+  [[7, 60], [10.5, 60]].forEach(([x, z]) => {
+    box(x - 1.5, x + 1.5, 0.6, 0.7, z - 1, z + 1, M.galv); box(x - 1.5, x + 1.5, 2.2, 2.3, z - 1, z + 1, M.galv);
+    [[-1.4, -.9], [1.4, -.9], [-1.4, .9], [1.4, .9]].forEach(([dx, dz]) => box(x + dx - .05, x + dx + .05, 0, 2.3, z + dz - .05, z + dz + .05, M.galv, scene, false));
+    for (let i = 0; i < 3; i++) for (let j = 0; j < 2; j++) {
+      const s = new THREE.Mesh(new THREE.SphereGeometry(.4, 20, 14), ball); s.position.set(x - 1 + i, 1.1, z - .45 + j * .9); s.castShadow = true; scene.add(s);
+      const s2 = s.clone(); s2.position.y = 2.7; scene.add(s2);
+    }
+  });
 
   // ---------- Upper level: office over the washrooms, deck over the rest ----------
   const upper = new THREE.Group(); scene.add(upper);
@@ -363,19 +396,19 @@ h1 { margin: 0; font-size: clamp(22px, 3vw, 32px); font-weight: 800; letter-spac
   }
   const hoopPts = [];
   // Hoop 1: cantilevers off the deck edge beam and the column below it, clear of the glass guard
-  backboard(22.75, 35, true);
-  [32.4, 37.6].forEach(z => {
+  backboard(22.75, CZ, true);
+  [CZ - 2.6, CZ + 2.6].forEach(z => {
     strut([FB, 9.15, z], [22.65, 9.6, z], .32, M.steel);                         // bottom arm, bolted to the edge beam
     strut([FB + .05, 9.95, z], [22.65, 12.85, z], .24, M.steel);                 // top brace, starts below the deck surface
   });
-  box(18.35, 18.65, 9.1, 9.5, 32.4, 37.6, M.steel);                              // cross member
-  strut([FB, 6.3, 35], [18.5, 9.2, 35], .26, M.steel);                           // knee brace back to the column
-  box(22.6, 22.7, 9.6, 12.85, 32.4, 37.6, M.steel, scene, false);
-  hoopPts.push(rimAndNet(22.75, 35, 1, 0));
+  box(18.35, 18.65, 9.1, 9.5, CZ - 2.6, CZ + 2.6, M.steel);                      // cross member
+  strut([FB, 6.3, CZ], [18.5, 9.2, CZ], .26, M.steel);                           // knee brace back to the column
+  box(22.6, 22.7, 9.6, 12.85, CZ - 2.6, CZ + 2.6, M.steel, scene, false);
+  hoopPts.push(rimAndNet(22.75, CZ, 1, 0));
   // Hoop 2: back wall
-  backboard(98.75, 35, true);
-  [32.4, 37.6].forEach(z => { strut([W, 12.8, z], [98.85, 12.8, z], .28, M.steel); strut([W, 8.6, z], [98.85, 12.5, z], .22, M.steel); });
-  hoopPts.push(rimAndNet(98.75, 35, -1, 0));
+  backboard(98.75, CZ, true);
+  [CZ - 2.6, CZ + 2.6].forEach(z => { strut([W, 12.8, z], [98.85, 12.8, z], .28, M.steel); strut([W, 8.6, z], [98.85, 12.5, z], .22, M.steel); });
+  hoopPts.push(rimAndNet(98.75, CZ, -1, 0));
   // Hoops 3 to 6: side walls, fold up when the main court is in use
   [[38.25, 8, 1, 0], [38.25, 56, -1, D], [83.25, 8, 1, 0], [83.25, 56, -1, D]].forEach(([x, z, n, wall]) => {
     backboard(x, z, false);
@@ -385,9 +418,9 @@ h1 { margin: 0; font-size: clamp(22px, 3vw, 32px); font-weight: 800; letter-spac
   const order = [0, 1, 2, 3, 4, 5];
 
   // Bench side
-  box(43.75, 55.75, 1.45, 1.6, 6.8, 8.4, M.oak); box(65.75, 77.75, 1.45, 1.6, 6.8, 8.4, M.oak);
-  [44.3, 55.2, 66.3, 77.2].forEach(x => box(x - .2, x + .2, 0, 1.45, 6.9, 8.3, M.steel));
-  box(56.75, 64.75, 0, 2.6, 6.6, 8.8, M.charcoal);
+  box(43.75, 55.75, 1.45, 1.6, 55.6, 57.2, M.oak); box(65.75, 77.75, 1.45, 1.6, 55.6, 57.2, M.oak);
+  [44.3, 55.2, 66.3, 77.2].forEach(x => box(x - .2, x + .2, 0, 1.45, 55.7, 57.1, M.steel));
+  box(56.75, 64.75, 0, 2.6, 55.2, 57.4, M.charcoal);
 
   // ---------- Overhead: LED high bays, open-web joists ----------
   [31, 46, 61, 76, 91].forEach(x => [16, 35, 54].forEach(z => {
@@ -416,7 +449,10 @@ h1 { margin: 0; font-size: clamp(22px, 3vw, 32px); font-weight: 800; letter-spac
     ['Stair up', 2, 6, 54],
     ['Entry', 0, 4.2, 26.5],
     ['Gate', FB + .5, 5, 19],
-    ['Bench side', 60.75, 3.8, 7.7]
+    ['Bench side', 60.75, 3.8, 56.3],
+    ['Equipment cage', 7, 4.6, 60],
+    ['Gate', FB + .5, 5, 53.5],
+    ['Exit', W - .5, 9.4, 34]
   ];
   const labelsEl = document.getElementById('labels');
   const tags = labelSpecs.map(([text, x, y, z, layer]) => {
@@ -431,7 +467,7 @@ h1 { margin: 0; font-size: clamp(22px, 3vw, 32px); font-weight: 800; letter-spac
   // ---------- Views ----------
   const views = {
     overview: { pos: [-22, 50, 96], tgt: [50, 4, 30], upper: true, roof: false },
-    back:     { pos: [104, 6.2, 50], tgt: [14, 8.5, 30], upper: true, roof: true },
+    back:     { pos: [104, 6.2, 46], tgt: [14, 8.5, 30], upper: true, roof: true },
     deck:     { pos: [7, DECK + 5.4, 34], tgt: [62, 4, 36], upper: true, roof: true },
     entry:    { pos: [1.2, 5.5, 26.5], tgt: [13, 4.4, 36], upper: true, roof: true },
     front:    { pos: [30, 26, -14], tgt: [6, 2, 24], upper: false, roof: false },
