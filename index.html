@@ -1,0 +1,500 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NØK Unit 6 in 3D</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100,400;100,500;100,600;100,800&display=swap">
+<style>
+/* Layout: companion to the Rev 2 drawing sheet. Paper page, a dark model "stage", view presets as a toolbar, key figures below. Single light page look by choice, to match the drawing set. */
+:root {
+  --paper:#F7F4EE; --ink:#1F1F1F; --sub:#6B675F; --rule:#D8D2C6; --line:#4F7FE0; --signal:#D2652D; --stage:#1B1C1E;
+  --sans: Archivo, "Helvetica Neue", Arial, sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+body { background: var(--paper); color: var(--ink); font-family: var(--sans); }
+.wrap { max-width: 1400px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 40px; display: grid; gap: 14px; }
+header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 24px; border-bottom: 1.2px solid var(--ink); padding-bottom: 12px; }
+h1 { margin: 0; font-size: clamp(22px, 3vw, 32px); font-weight: 800; letter-spacing: .04em; text-wrap: balance; }
+.meta { font-size: 13px; color: var(--sub); }
+.cap { text-transform: uppercase; letter-spacing: .14em; font-weight: 600; font-size: 11px; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.toolbar button { font: 500 13px var(--sans); color: var(--ink); background: #fff; border: 1px solid var(--rule); border-radius: 6px; padding: 7px 12px; cursor: pointer; }
+.toolbar button:hover { border-color: var(--ink); }
+.toolbar button[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.toolbar button:focus-visible, .toggles input:focus-visible { outline: 2px solid var(--line); outline-offset: 2px; }
+.toggles { display: flex; flex-wrap: wrap; gap: 14px; margin-left: auto; font-size: 13px; color: var(--sub); }
+.toggles label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.viewer { position: relative; height: clamp(440px, 70vh, 780px); border-radius: 4px; overflow: hidden; background: var(--stage); touch-action: none; }
+.viewer canvas { display: block; width: 100%; height: 100%; }
+.labels { position: absolute; inset: 0; pointer-events: none; }
+.tag { position: absolute; transform: translate(-50%, -50%); white-space: nowrap; font: 600 10.5px var(--sans); letter-spacing: .1em; text-transform: uppercase; color: var(--ink); background: rgba(247,244,238,.92); border-radius: 2px; padding: 3px 7px; }
+.tag.hoop { color: #fff; background: var(--signal); border-radius: 50%; padding: 2px 6px; letter-spacing: 0; }
+.hint { position: absolute; left: 12px; bottom: 10px; font-size: 12px; color: #B9B4AA; }
+.err { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; color: #B9B4AA; font-size: 14px; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px 24px; padding-top: 6px; }
+.fact b { display: block; font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.fact span { font-size: 12.5px; color: var(--sub); }
+.note { font-size: 13px; color: var(--sub); max-width: 72ch; line-height: 1.55; margin: 0; }
+.note a { color: var(--line); }
+</style>
+</head>
+<body style="margin:0">
+
+<div class="wrap">
+  <header>
+    <h1>NØK BASKETBALL · UNIT 6</h1>
+    <div class="meta"><span class="cap">3D massing model</span> · Rev 2 + 20 Oct changes · schematic, not for construction</div>
+  </header>
+
+  <div class="toolbar" role="toolbar" aria-label="Camera views">
+    <button type="button" id="v-overview" data-view="overview" aria-pressed="true">Overview</button>
+    <button type="button" id="v-back" data-view="back">From the back wall</button>
+    <button type="button" id="v-deck" data-view="deck">From the deck</button>
+    <button type="button" id="v-entry" data-view="entry">Walking in</button>
+    <button type="button" id="v-front" data-view="front">Front block cutaway</button>
+    <button type="button" id="v-plan" data-view="plan">Plan</button>
+    <div class="toggles">
+      <label for="t-upper"><input type="checkbox" id="t-upper" checked> Upper level</label>
+      <label for="t-roof"><input type="checkbox" id="t-roof"> Roof structure</label>
+      <label for="t-labels"><input type="checkbox" id="t-labels" checked> Labels</label>
+    </div>
+  </div>
+
+  <div class="viewer" id="viewer">
+    <div class="labels" id="labels"></div>
+    <div class="hint">Drag to orbit · scroll or pinch to zoom · right-drag or two fingers to pan</div>
+  </div>
+
+  <div class="facts">
+    <div class="fact"><b>64' × 108'</b><span>6,912 sq ft, 19' clear</span></div>
+    <div class="fact"><b>84' × 50'</b><span>main court, 5'3" end runouts</span></div>
+    <div class="fact"><b>2 × 60' × 45'</b><span>cross-court training courts</span></div>
+    <div class="fact"><b>13'6"</b><span>front block: washrooms, lobby, change area</span></div>
+    <div class="fact"><b>+10'4"</b><span>viewing deck, office over the washrooms</span></div>
+  </div>
+  <p class="note">Built from the Unit 6 layout (Rev 3), with the stair moved to the far corner, benches in the lobby, a black rubber lobby floor and a 4' chain-link divider. Building dimensions are from the 28 Jun site measure and still need a laser survey. Roof structure, ducts, lights, finishes and the hoop 1 frame are placeholders until the architect and engineer design them.</p>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+(function () {
+  const viewer = document.getElementById('viewer');
+  if (!window.THREE || !THREE.OrbitControls) {
+    viewer.insertAdjacentHTML('beforeend', '<div class="err">The 3D viewer could not load. Reload the page to try again.</div>');
+    return;
+  }
+
+  // Units are feet. x runs from the street wall (0) to the back wall (108); z from the top side wall (0) to the bottom side wall (64).
+  const W = 108, D = 64, H = 19, DECK = 10.33, FB = 13.5, PI = Math.PI;
+  const STAIR_Z0 = 44.4, STAIR_Z1 = 60, GATE = [16.5, 21.5];
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.15;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  viewer.insertBefore(renderer.domElement, viewer.firstChild);
+
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color('#1B1C1E');
+  scene.fog = new THREE.Fog('#1B1C1E', 220, 420);
+  const camera = new THREE.PerspectiveCamera(42, 1, 0.3, 1000);
+  const controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.minDistance = 3;
+  controls.maxDistance = 320;
+
+  scene.add(new THREE.HemisphereLight(0xfff6ea, 0x3a3836, 0.6));
+  scene.add(new THREE.AmbientLight(0xffffff, 0.12));
+  const key = new THREE.DirectionalLight(0xfff3e0, 0.95);
+  key.position.set(80, 130, 10);
+  key.target.position.set(54, 0, 32);
+  key.castShadow = true;
+  key.shadow.mapSize.set(2048, 2048);
+  Object.assign(key.shadow.camera, { left: -75, right: 75, top: 55, bottom: -55, near: 10, far: 320 });
+  key.shadow.bias = -0.0004; key.shadow.normalBias = 0.03;
+  scene.add(key, key.target);
+  const fill = new THREE.DirectionalLight(0xdfe8ff, 0.3);
+  fill.position.set(-60, 50, 90);
+  scene.add(fill);
+
+  const mat = (c, o) => new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: 0.85, metalness: 0 }, o || {}));
+  const M = {
+    wallLow: mat('#3E4144'), wallHigh: mat('#D3D0CA'), tileWall: mat('#E6E3DD', { roughness: .5 }), tile: mat('#D9D6D0', { roughness: .45 }),
+    charcoal: mat('#2E3033'), rubber: mat('#17181A', { roughness: .95 }), concrete: mat('#8D8A85'),
+    timber: mat('#A4845C', { roughness: .7 }), steel: mat('#1E1F21', { roughness: .45, metalness: .55 }), galv: mat('#9CA2A8', { roughness: .4, metalness: .7 }),
+    pad: mat('#D2652D', { roughness: .7 }), oak: mat('#B08D62', { roughness: .6 }), fixture: mat('#F5F4F0', { roughness: .25 }),
+    rim: mat('#E8743B', { roughness: .35, metalness: .3 }), white: mat('#F2F2EF', { roughness: .5 }),
+    glass: new THREE.MeshStandardMaterial({ color: '#BFD6E8', transparent: true, opacity: .2, roughness: .05, metalness: .1, depthWrite: false }),
+    net: new THREE.MeshBasicMaterial({ color: '#ffffff', wireframe: true, transparent: true, opacity: .75 }),
+    led: new THREE.MeshBasicMaterial({ color: '#FFF9EC' }),
+    black: new THREE.MeshBasicMaterial({ color: '#141414' }), blue: new THREE.MeshBasicMaterial({ color: '#4F7FE0' })
+  };
+  const edgeMat = new THREE.LineBasicMaterial({ color: '#0d0d0d', transparent: true, opacity: .28 });
+
+  function finish(mesh, m, parent, edges) {
+    const clear = m.transparent;
+    mesh.castShadow = !clear; mesh.receiveShadow = !clear;
+    if (edges && !clear) mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(mesh.geometry), edgeMat));
+    (parent || scene).add(mesh);
+    return mesh;
+  }
+  function box(x1, x2, y1, y2, z1, z2, m, parent, edges) {
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(Math.abs(x2 - x1), Math.abs(y2 - y1), Math.abs(z2 - z1)), m);
+    mesh.position.set((x1 + x2) / 2, (y1 + y2) / 2, (z1 + z2) / 2);
+    return finish(mesh, m, parent, edges !== false);
+  }
+  function strut(a, b, t, m, parent) {
+    const A = new THREE.Vector3(...a), B = new THREE.Vector3(...b);
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(t, t, A.distanceTo(B)), m);
+    mesh.position.copy(A).add(B).multiplyScalar(.5); mesh.lookAt(B);
+    return finish(mesh, m, parent, false);
+  }
+
+  // ---------- Floors ----------
+  function woodTexture() {
+    const c = document.createElement('canvas'); c.width = c.height = 1024;
+    const g = c.getContext('2d');
+    g.fillStyle = '#E2C595'; g.fillRect(0, 0, 1024, 1024);
+    for (let i = 0; i < 32; i++) {
+      for (let j = 0; j < 4; j++) {
+        const s = 0.9 + (((i * 7 + j * 13) % 17) / 100);
+        const off = ((i * 211) % 256) + j * 256;
+        g.fillStyle = `rgb(${Math.round(226 * s)},${Math.round(194 * s)},${Math.round(146 * s)})`;
+        g.fillRect(off, i * 32, 256, 32);
+        g.fillStyle = 'rgba(120,85,45,.35)'; g.fillRect(off, i * 32, 1.5, 32);
+      }
+      g.fillStyle = 'rgba(120,85,45,.3)'; g.fillRect(0, i * 32, 1024, 1);
+    }
+    const t = new THREE.CanvasTexture(c);
+    t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set((W - FB) / 12, D / 12); t.encoding = THREE.sRGBEncoding;
+    t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    return t;
+  }
+  const court = new THREE.Mesh(new THREE.PlaneGeometry(W - FB, D), mat('#ffffff', { map: woodTexture(), roughness: .42 }));
+  court.rotation.x = -PI / 2; court.position.set(FB + (W - FB) / 2, 0, D / 2); court.receiveShadow = true; scene.add(court);
+  box(0, FB, -0.02, 0.02, 0, 15, M.tile, scene, false);                       // washroom tile
+  box(0, FB, -0.02, 0.03, 15, D, M.rubber, scene, false);                     // black rubber lobby and change floor
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(600, 600), mat('#111213', { roughness: 1 }));
+  ground.rotation.x = -PI / 2; ground.position.set(W / 2, -0.06, D / 2); ground.receiveShadow = true; scene.add(ground);
+
+  // ---------- Court lines ----------
+  function seg(x1, z1, x2, z2, w, m, y) {
+    const g = new THREE.PlaneGeometry(Math.hypot(x2 - x1, z2 - z1), w); g.rotateX(-PI / 2);
+    const mesh = new THREE.Mesh(g, m);
+    mesh.rotation.y = Math.atan2(-(z2 - z1), x2 - x1);
+    mesh.position.set((x1 + x2) / 2, y, (z1 + z2) / 2);
+    scene.add(mesh);
+  }
+  function arc(cx, cz, r, a0, a1, w, m, y) {
+    const n = Math.max(10, Math.ceil(Math.abs(a1 - a0) * r / 0.8));
+    for (let i = 0; i < n; i++) {
+      const p = a0 + (a1 - a0) * i / n, q = a0 + (a1 - a0) * (i + 1) / n;
+      seg(cx + r * Math.cos(p), cz + r * Math.sin(p), cx + r * Math.cos(q), cz + r * Math.sin(q), w, m, y);
+    }
+  }
+  const lw = 0.17, ly = 0.03, tw = 0.12, ty = 0.022;
+  seg(18.75, 10, 102.75, 10, lw, M.black, ly); seg(18.75, 60, 102.75, 60, lw, M.black, ly);
+  seg(18.75, 10, 18.75, 60, lw, M.black, ly); seg(102.75, 10, 102.75, 60, lw, M.black, ly);
+  seg(60.75, 10, 60.75, 60, lw, M.black, ly); arc(60.75, 35, 6, 0, 2 * PI, lw, M.black, ly);
+  [[18.75, 37.75, 1], [102.75, 83.75, -1]].forEach(([base, ft, s]) => {
+    const a0 = s > 0 ? -PI / 2 : PI / 2, a1 = s > 0 ? PI / 2 : 3 * PI / 2;
+    seg(base, 29, ft, 29, lw, M.black, ly); seg(base, 41, ft, 41, lw, M.black, ly); seg(ft, 29, ft, 41, lw, M.black, ly);
+    arc(ft, 35, 6, a0, a1, lw, M.black, ly);
+    const rim = base + s * 5.25;
+    seg(base, 15.25, rim, 15.25, lw, M.black, ly); seg(base, 54.75, rim, 54.75, lw, M.black, ly);
+    arc(rim, 35, 19.75, a0, a1, lw, M.black, ly);
+  });
+  [[15.75, 60.75, 38.25], [60.75, 105.75, 83.25]].forEach(([a, b, h]) => {
+    seg(a, 4, b, 4, tw, M.blue, ty); seg(a, 64, b, 64, tw, M.blue, ty); seg(a, 4, a, 64, tw, M.blue, ty); seg(b, 4, b, 64, tw, M.blue, ty);
+    [[4, 23, 9.25, 0, PI], [64, 45, 54.75, PI, 2 * PI]].forEach(([base, ft, rim, a0, a1]) => {
+      seg(h - 6, base, h - 6, ft, tw, M.blue, ty); seg(h + 6, base, h + 6, ft, tw, M.blue, ty); seg(h - 6, ft, h + 6, ft, tw, M.blue, ty);
+      arc(h, ft, 6, a0, a1, tw, M.blue, ty);
+      seg(h - 19.75, base, h - 19.75, rim, tw, M.blue, ty); seg(h + 19.75, base, h + 19.75, rim, tw, M.blue, ty);
+      arc(h, rim, 19.75, a0, a1, tw, M.blue, ty);
+    });
+  });
+  (function centreLogo() {
+    const c = document.createElement('canvas'); c.width = c.height = 512;
+    const g = c.getContext('2d');
+    g.fillStyle = '#1F1F1F'; g.beginPath(); g.arc(256, 256, 256, 0, 2 * PI); g.fill();
+    g.fillStyle = '#EAD3AA'; g.font = '800 150px Archivo, "Helvetica Neue", Arial, sans-serif';
+    g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('NØK', 256, 266);
+    const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding;
+    const m = new THREE.Mesh(new THREE.CircleGeometry(4.2, 64), new THREE.MeshStandardMaterial({ map: t, transparent: true, roughness: .4 }));
+    m.rotation.x = -PI / 2; m.rotation.z = -PI / 2; m.position.set(60.75, 0.035, 35); m.receiveShadow = true; scene.add(m);
+  })();
+
+  // ---------- Shell: two-tone walls, cut away on the camera side ----------
+  const T = 0.67, WS = 10;
+  const walls = { street: new THREE.Group(), back: new THREE.Group(), top: new THREE.Group(), bottom: new THREE.Group() };
+  Object.values(walls).forEach(g => scene.add(g));
+  function shell(x1, x2, z1, z2, g, y0) {
+    const lo = y0 || 0;
+    if (lo < WS) box(x1, x2, lo, WS, z1, z2, M.wallLow, g);
+    box(x1, x2, Math.max(lo, WS), H, z1, z2, M.wallHigh, g);
+  }
+  shell(-T, 0, 0, 25, walls.street); shell(-T, 0, 28, D, walls.street); shell(-T, 0, 25, 28, walls.street, 7.3);
+  box(-T - .05, .05, 7.1, 7.4, 24.8, 28.2, M.steel, walls.street); box(-T - .05, .05, 0, 7.4, 24.8, 25, M.steel, walls.street); box(-T - .05, .05, 0, 7.4, 28, 28.2, M.steel, walls.street);
+  box(-0.5, -0.38, 0, 7.1, 25, 28, M.glass, walls.street);
+  shell(W, W + T, 0, D, walls.back);
+  shell(-T, W + T, -T, 0, walls.top);
+  shell(-T, W + T, D, D + T, walls.bottom);
+  box(W - 0.35, W, 0, 6, 8, 62, M.pad, walls.back);
+
+  // ---------- Ground floor front block ----------
+  const lower = new THREE.Group(); scene.add(lower);
+  const t2 = 0.33, RH = DECK - 0.9;
+  box(1, 1 + t2, 0, RH, 0, 15, M.tileWall, lower);                              // chase wall
+  box(9.5, 9.5 + t2, 0, RH, 0, 8, M.tileWall, lower);
+  box(1, 6.5, 0, RH, 8 - t2 / 2, 8 + t2 / 2, M.tileWall, lower);
+  box(9.5, 10.2, 0, RH, 8 - t2 / 2, 8 + t2 / 2, M.tileWall, lower);
+  box(12.8, FB, 0, RH, 8 - t2 / 2, 8 + t2 / 2, M.tileWall, lower);
+  box(6.5, 9.5, 7.2, RH, 8 - t2 / 2, 8 + t2 / 2, M.tileWall, lower);
+  box(10.2, 12.8, 7.2, RH, 8 - t2 / 2, 8 + t2 / 2, M.tileWall, lower);
+  box(1, 6.5, 0, RH, 11.5 - t2 / 2, 11.5 + t2 / 2, M.tileWall, lower);
+  box(0, 6.5 + t2 / 2, 0, RH, 15 - t2, 15, M.charcoal, lower);                    // lobby face of stall 3
+  [[8, 8.5], [11, 12], [14.5, 15]].forEach(([a, b]) => box(6.5 - t2 / 2, 6.5 + t2 / 2, 0, RH, a, b, M.tileWall, lower));
+  box(6.5 - t2 / 2, 6.5 + t2 / 2, 7.2, RH, 8, 15, M.tileWall, lower);
+  box(FB - t2, FB, 0, RH, 0, 15, M.charcoal, lower);                             // court face of washrooms
+  box(FB - 0.02, FB + 0.3, 0, 6, 8, 15, M.pad, lower);
+  // fixtures and doors
+  box(1.4, 3.6, 0, 1.4, 0.4, 2.0, M.fixture, lower);
+  box(1.4, 3.0, 2.6, 3.0, 3.4, 5.4, M.fixture, lower);
+  box(1.4, 3.6, 0, 1.4, 9.0, 10.4, M.fixture, lower);
+  box(1.4, 3.6, 0, 1.4, 12.5, 13.9, M.fixture, lower);
+  box(1.6, 3.4, 2.6, 3.0, 15, 16.6, M.fixture, lower);
+  box(4.1, 5.9, 2.6, 3.0, 15, 16.6, M.fixture, lower);
+  box(1.4, 6.1, 4.0, 7.0, 15, 15.05, mat('#C9D3D9', { roughness: .1, metalness: .6 }), lower, false); // mirror
+  [0.6, 2.4, 4.2, 6.0].forEach(y => box(9.9, 13.1, y, y + 0.08, 0.2, 1.4, M.galv, lower));
+  // benches and shoe change in the lobby
+  box(0.25, 1.75, 1.45, 1.6, 30, 43, M.oak, lower); box(0.4, 1.6, 0, 1.45, 30.4, 30.8, M.steel, lower); box(0.4, 1.6, 0, 1.45, 42.2, 42.6, M.steel, lower);
+  box(0.02, 0.3, 1.6, 4.2, 30, 43, M.oak, lower);
+  box(5.5, 7.5, 1.45, 1.6, 31, 42, M.oak, lower); box(5.7, 7.3, 0, 1.45, 31.4, 31.8, M.steel, lower); box(5.7, 7.3, 0, 1.45, 41.2, 41.6, M.steel, lower);
+  // open stair to the deck in the far corner: steel stringers, oak treads, nothing underneath
+  const rise = DECK / 18, run = (STAIR_Z1 - STAIR_Z0) / 17;
+  for (let i = 0; i < 17; i++) box(0.3, 3.7, (i + 1) * rise - 0.15, (i + 1) * rise, STAIR_Z0 + i * run, STAIR_Z0 + (i + 1) * run + 0.08, M.oak, lower);
+  [0.18, 3.82].forEach(x => strut([x, 0.35, STAIR_Z0 - 0.2], [x, DECK - 0.15, STAIR_Z1], 0.3, M.steel, lower));
+  strut([4.0, 3.2, STAIR_Z0], [4.0, DECK + 3.2, STAIR_Z1], 0.12, M.steel, lower);
+  for (let i = 0; i <= 4; i++) { const z = STAIR_Z0 + i * (STAIR_Z1 - STAIR_Z0) / 4, y = i * DECK / 4; box(3.95, 4.05, y + 0.2, y + 3.2, z - .05, z + .05, M.steel, lower, false); }
+  // deck columns, padded
+  [21, 35, 49].forEach(z => { box(FB - 0.5, FB, 0, DECK - 0.9, z - 0.25, z + 0.25, M.steel, lower); box(FB - 0.85, FB + 0.35, 0, 6, z - 0.6, z + 0.6, M.pad, lower); });
+
+  // 4' chain-link divider between lobby and court, with a 5' opening by the washrooms
+  function chainTexture() {
+    const c = document.createElement('canvas'); c.width = c.height = 128;
+    const g = c.getContext('2d');
+    g.strokeStyle = '#C3C8CD'; g.lineWidth = 7;
+    g.beginPath(); g.moveTo(0, 0); g.lineTo(128, 128); g.moveTo(128, 0); g.lineTo(0, 128); g.stroke();
+    const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.encoding = THREE.sRGBEncoding;
+    return t;
+  }
+  const chainBase = chainTexture();
+  function fence(z1, z2) {
+    const L = z2 - z1, t = chainBase.clone(); t.needsUpdate = true; t.repeat.set(L / 0.45, 4 / 0.45);
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(L, 4), new THREE.MeshStandardMaterial({ map: t, transparent: true, alphaTest: .35, side: THREE.DoubleSide, roughness: .4, metalness: .7 }));
+    mesh.rotation.y = PI / 2; mesh.position.set(FB + 0.45, 2, (z1 + z2) / 2); mesh.castShadow = true; scene.add(mesh);
+    strut([FB + 0.45, 4, z1], [FB + 0.45, 4, z2], 0.14, M.galv);
+    strut([FB + 0.45, 0.2, z1], [FB + 0.45, 0.2, z2], 0.08, M.galv);
+    const n = Math.ceil(L / 8);
+    for (let i = 0; i <= n; i++) box(FB + 0.37, FB + 0.53, 0, 4.1, z1 + i * L / n - .08, z1 + i * L / n + .08, M.galv, scene, false);
+  }
+  fence(15, GATE[0]); fence(GATE[1], D);
+
+  // ---------- Upper level: office over the washrooms, deck over the rest ----------
+  const upper = new THREE.Group(); scene.add(upper);
+  const SL = DECK - 0.9;
+  box(0, FB, SL, DECK, 0, 15, M.timber, upper);
+  box(0, FB, SL, DECK, 15, STAIR_Z0, M.timber, upper);
+  box(4, FB, SL, DECK, STAIR_Z0, STAIR_Z1, M.timber, upper);
+  box(0, FB, SL, DECK, STAIR_Z1, D, M.timber, upper);
+  box(FB - 0.35, FB, SL - 0.25, DECK, 0, D, M.steel, upper);                    // steel edge beam carrying the guard and hoop 1
+  const OT = DECK + 8.2;
+  box(FB - t2, FB, DECK, DECK + 3, 0, 15, M.charcoal, upper);
+  box(FB - 0.2, FB - 0.1, DECK + 3, DECK + 7.2, 0, 15, M.glass, upper);
+  [0, 3.75, 7.5, 11.25, 15].forEach(z => box(FB - 0.3, FB, DECK + 3, DECK + 7.2, Math.max(0, z - .1), Math.min(15, z + .1), M.steel, upper, false));
+  box(FB - t2, FB, DECK + 7.2, OT, 0, 15, M.charcoal, upper);
+  box(0, 9, DECK, OT, 15 - t2, 15, M.charcoal, upper);
+  box(11.6, FB, DECK, OT, 15 - t2, 15, M.charcoal, upper);
+  box(9, 11.6, DECK + 7.2, OT, 15 - t2, 15, M.charcoal, upper);
+  box(2, 7.5, DECK + 2.4, DECK + 2.55, 3, 5.6, M.oak, upper); box(2.2, 7.3, DECK, DECK + 2.4, 3.2, 3.4, M.steel, upper);
+  // glass guard, 1,070 mm, black posts and cap
+  box(FB - 0.12, FB - 0.04, DECK, DECK + 3.5, 15, D, M.glass, upper);
+  box(FB - 0.18, FB + 0.02, DECK + 3.5, DECK + 3.62, 15, D, M.steel, upper, false);
+  for (let z = 15; z <= D + .01; z += 49 / 8) box(FB - 0.2, FB - 0.06, DECK, DECK + 3.5, z - .07, z + .07, M.steel, upper, false);
+  box(3.94, 4.06, DECK, DECK + 3.5, STAIR_Z0, STAIR_Z1, M.glass, upper);
+  box(0, 4, DECK, DECK + 3.5, STAIR_Z0 - .06, STAIR_Z0 + .06, M.glass, upper);
+  box(3.9, 4.1, DECK + 3.5, DECK + 3.62, STAIR_Z0, STAIR_Z1, M.steel, upper, false);
+  box(0, 4.1, DECK + 3.5, DECK + 3.62, STAIR_Z0 - .1, STAIR_Z0 + .1, M.steel, upper, false);
+  [20, 26, 32, 38].forEach(z => { box(7.6, 9.4, DECK + 1.5, DECK + 1.65, z - 1.6, z + 1.6, M.oak, upper); box(7.8, 9.2, DECK, DECK + 1.5, z - .15, z + .15, M.steel, upper); });
+
+  // ---------- Hoops ----------
+  function backboard(cx, cz, alongX) {
+    const hw = 3, y1 = 9.5, y2 = 13;
+    const bx = alongX ? [cx - .06, cx + .06] : [cx - hw, cx + hw];
+    const bz = alongX ? [cz - hw, cz + hw] : [cz - .06, cz + .06];
+    box(bx[0], bx[1], y1, y2, bz[0], bz[1], M.glass);
+    const f = .12;
+    if (alongX) {
+      box(cx - f, cx + f, y1, y1 + f, cz - hw, cz + hw, M.steel); box(cx - f, cx + f, y2 - f, y2, cz - hw, cz + hw, M.steel);
+      box(cx - f, cx + f, y1, y2, cz - hw, cz - hw + f, M.steel); box(cx - f, cx + f, y1, y2, cz + hw - f, cz + hw, M.steel);
+      box(cx - .08, cx + .08, 10.05, 11.55, cz - .98, cz - .9, M.white, scene, false); box(cx - .08, cx + .08, 10.05, 11.55, cz + .9, cz + .98, M.white, scene, false);
+      box(cx - .08, cx + .08, 11.47, 11.55, cz - .98, cz + .98, M.white, scene, false);
+    } else {
+      box(cx - hw, cx + hw, y1, y1 + f, cz - f, cz + f, M.steel); box(cx - hw, cx + hw, y2 - f, y2, cz - f, cz + f, M.steel);
+      box(cx - hw, cx - hw + f, y1, y2, cz - f, cz + f, M.steel); box(cx + hw - f, cx + hw, y1, y2, cz - f, cz + f, M.steel);
+      box(cx - .98, cx - .9, 10.05, 11.55, cz - .08, cz + .08, M.white, scene, false); box(cx + .9, cx + .98, 10.05, 11.55, cz - .08, cz + .08, M.white, scene, false);
+      box(cx - .98, cx + .98, 11.47, 11.55, cz - .08, cz + .08, M.white, scene, false);
+    }
+  }
+  function rimAndNet(x, z, nx, nz) {
+    const rx = x + nx * 1.25, rz = z + nz * 1.25;
+    const rim = new THREE.Mesh(new THREE.TorusGeometry(0.75, 0.055, 10, 40), M.rim);
+    rim.rotation.x = PI / 2; rim.position.set(rx, 10, rz); rim.castShadow = true; scene.add(rim);
+    const net = new THREE.Mesh(new THREE.CylinderGeometry(0.75, 0.48, 1.5, 12, 2, true), M.net);
+    net.position.set(rx, 9.25, rz); scene.add(net);
+    strut([x + nx * .1, 10, z + nz * .1], [x + nx * .55, 10, z + nz * .55], .2, M.rim);
+    return new THREE.Vector3(rx, 13.8, rz);
+  }
+  const hoopPts = [];
+  // Hoop 1: cantilevers off the deck edge beam and the column below it, clear of the glass guard
+  backboard(22.75, 35, true);
+  [32.4, 37.6].forEach(z => {
+    strut([FB, 9.15, z], [22.65, 9.6, z], .32, M.steel);                         // bottom arm, bolted to the edge beam
+    strut([FB + .05, 9.95, z], [22.65, 12.85, z], .24, M.steel);                 // top brace, starts below the deck surface
+  });
+  box(18.35, 18.65, 9.1, 9.5, 32.4, 37.6, M.steel);                              // cross member
+  strut([FB, 6.3, 35], [18.5, 9.2, 35], .26, M.steel);                           // knee brace back to the column
+  box(22.6, 22.7, 9.6, 12.85, 32.4, 37.6, M.steel, scene, false);
+  hoopPts.push(rimAndNet(22.75, 35, 1, 0));
+  // Hoop 2: back wall
+  backboard(98.75, 35, true);
+  [32.4, 37.6].forEach(z => { strut([W, 12.8, z], [98.85, 12.8, z], .28, M.steel); strut([W, 8.6, z], [98.85, 12.5, z], .22, M.steel); });
+  hoopPts.push(rimAndNet(98.75, 35, -1, 0));
+  // Hoops 3 to 6: side walls, fold up when the main court is in use
+  [[38.25, 8, 1, 0], [38.25, 56, -1, D], [83.25, 8, 1, 0], [83.25, 56, -1, D]].forEach(([x, z, n, wall]) => {
+    backboard(x, z, false);
+    [x - 2.6, x + 2.6].forEach(xx => { strut([xx, 12.8, wall], [xx, 12.8, z - n * .1], .28, M.steel); strut([xx, 8.6, wall], [xx, 12.5, z - n * .1], .22, M.steel); });
+    hoopPts.push(rimAndNet(x, z, 0, n));
+  });
+  const order = [0, 1, 2, 3, 4, 5];
+
+  // Bench side
+  box(43.75, 55.75, 1.45, 1.6, 6.8, 8.4, M.oak); box(65.75, 77.75, 1.45, 1.6, 6.8, 8.4, M.oak);
+  [44.3, 55.2, 66.3, 77.2].forEach(x => box(x - .2, x + .2, 0, 1.45, 6.9, 8.3, M.steel));
+  box(56.75, 64.75, 0, 2.6, 6.6, 8.8, M.charcoal);
+
+  // ---------- Overhead: LED high bays, open-web joists ----------
+  [31, 46, 61, 76, 91].forEach(x => [16, 35, 54].forEach(z => {
+    box(x - .6, x + .6, 17.55, 17.8, z - 2, z + 2, M.steel, scene, false);
+    box(x - .5, x + .5, 17.5, 17.56, z - 1.9, z + 1.9, M.led, scene, false);
+    box(x - .03, x + .03, 17.8, H, z - 1.6, z - 1.54, M.steel, scene, false); box(x - .03, x + .03, 17.8, H, z + 1.54, z + 1.6, M.steel, scene, false);
+  }));
+  const roof = new THREE.Group(); scene.add(roof);
+  for (let x = 3; x < W; x += 6) {
+    box(x - .14, x + .14, H, H + .22, 0, D, M.steel, roof, false);
+    box(x - .14, x + .14, H + 2, H + 2.22, 0, D, M.steel, roof, false);
+    for (let z = 0; z < D - .1; z += 4) strut([x, H + .2, z], [x, H + 2, z + 2], .1, M.steel, roof), strut([x, H + 2, z + 2], [x, H + .2, z + 4], .1, M.steel, roof);
+  }
+  roof.traverse(o => { o.castShadow = false; });
+
+  // ---------- Labels ----------
+  const labelSpecs = [
+    ['Main court 84\' × 50\'', 60.75, 0.5, 47],
+    ['Viewing deck', 8, DECK + 5, 28, 'upper'],
+    ['Office', 6.75, DECK + 9.6, 7.5, 'upper'],
+    ['Universal WC', 5.2, 5, 4, 'lower'],
+    ['Stalls', 3.8, 5, 11.6, 'lower'],
+    ['Utility', 11.6, 5, 4, 'lower'],
+    ['Lobby', 9.5, 3.2, 20],
+    ['Benches · shoe change', 4, 3.4, 36.5],
+    ['Stair up', 2, 6, 54],
+    ['Entry', 0, 4.2, 26.5],
+    ['Gate', FB + .5, 5, 19],
+    ['Bench side', 60.75, 3.8, 7.7]
+  ];
+  const labelsEl = document.getElementById('labels');
+  const tags = labelSpecs.map(([text, x, y, z, layer]) => {
+    const el = document.createElement('div'); el.className = 'tag'; el.textContent = text; labelsEl.appendChild(el);
+    return { el, p: new THREE.Vector3(x, y, z), layer };
+  });
+  hoopPts.forEach((p, i) => {
+    const el = document.createElement('div'); el.className = 'tag hoop'; el.textContent = String(order[i] + 1); labelsEl.appendChild(el);
+    tags.push({ el, p });
+  });
+
+  // ---------- Views ----------
+  const views = {
+    overview: { pos: [-22, 50, 96], tgt: [50, 4, 30], upper: true, roof: false },
+    back:     { pos: [104, 6.2, 50], tgt: [14, 8.5, 30], upper: true, roof: true },
+    deck:     { pos: [7, DECK + 5.4, 34], tgt: [62, 4, 36], upper: true, roof: true },
+    entry:    { pos: [1.2, 5.5, 26.5], tgt: [13, 4.4, 36], upper: true, roof: true },
+    front:    { pos: [30, 26, -14], tgt: [6, 2, 24], upper: false, roof: false },
+    plan:     { pos: [54, 150, 32.01], tgt: [54, 0, 32], upper: true, roof: false }
+  };
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const upperBox = document.getElementById('t-upper'), roofBox = document.getElementById('t-roof');
+  let anim = null;
+  function go(name) {
+    const v = views[name];
+    document.querySelectorAll('.toolbar button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.view === name)));
+    upperBox.checked = upper.visible = v.upper;
+    roofBox.checked = roof.visible = v.roof;
+    const to = { pos: new THREE.Vector3(...v.pos), tgt: new THREE.Vector3(...v.tgt) };
+    if (reduce) { camera.position.copy(to.pos); controls.target.copy(to.tgt); controls.update(); return; }
+    anim = { from: { pos: camera.position.clone(), tgt: controls.target.clone() }, to, t0: performance.now(), dur: 950 };
+  }
+  document.querySelectorAll('.toolbar button').forEach(b => b.addEventListener('click', () => go(b.dataset.view)));
+  upperBox.addEventListener('change', () => { upper.visible = upperBox.checked; });
+  roofBox.addEventListener('change', () => { roof.visible = roofBox.checked; });
+  document.getElementById('t-labels').addEventListener('change', e => { labelsEl.hidden = !e.target.checked; });
+  controls.addEventListener('start', () => { anim = null; });
+
+  roof.visible = false;
+  camera.position.set(...views.overview.pos); controls.target.set(...views.overview.tgt); controls.update();
+
+  function resize() {
+    const w = viewer.clientWidth, h = viewer.clientHeight;
+    renderer.setSize(w, h, false); camera.aspect = w / h; camera.fov = camera.aspect < 1 ? 62 : 42; camera.updateProjectionMatrix();
+  }
+  new ResizeObserver(resize).observe(viewer); resize();
+
+  const v = new THREE.Vector3();
+  function frame(now) {
+    if (anim) {
+      const k = Math.min(1, (now - anim.t0) / anim.dur), e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+      camera.position.lerpVectors(anim.from.pos, anim.to.pos, e);
+      controls.target.lerpVectors(anim.from.tgt, anim.to.tgt, e);
+      if (k === 1) anim = null;
+    }
+    controls.update();
+    const c = camera.position;
+    walls.street.visible = c.x > 0; walls.back.visible = c.x < W; walls.top.visible = c.z > 0; walls.bottom.visible = c.z < D;
+    renderer.render(scene, camera);
+    if (!labelsEl.hidden) {
+      const w = viewer.clientWidth, h = viewer.clientHeight, placed = [];
+      // Hoop numbers first, then labels in list order; a label that would overlap one already placed is skipped.
+      tags.slice().sort((a, b) => (b.el.classList.contains('hoop') ? 1 : 0) - (a.el.classList.contains('hoop') ? 1 : 0)).forEach(t => {
+        const hide = (t.layer === 'upper' && !upper.visible) || (t.layer === 'lower' && upper.visible && camera.position.y > DECK + 2 && camera.position.x > 0);
+        v.copy(t.p).project(camera);
+        if (hide || v.z > 1 || Math.abs(v.x) > 1.05 || Math.abs(v.y) > 1.05) { t.el.style.display = 'none'; return; }
+        const x = (v.x + 1) / 2 * w, y = (1 - v.y) / 2 * h;
+        t.el.style.display = '';
+        const bw = t.el.offsetWidth / 2 + 4, bh = t.el.offsetHeight / 2 + 3;
+        if (placed.some(r => Math.abs(r.x - x) < r.bw + bw && Math.abs(r.y - y) < r.bh + bh)) { t.el.style.display = 'none'; return; }
+        placed.push({ x, y, bw, bh });
+        t.el.style.left = x + 'px'; t.el.style.top = y + 'px';
+      });
+    }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
