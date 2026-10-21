@@ -494,6 +494,23 @@ h1 { margin: 0; font-size: clamp(22px, 3vw, 32px); font-weight: 800; letter-spac
   roof.visible = false;
   camera.position.set(...views.overview.pos); controls.target.set(...views.overview.tgt); controls.update();
 
+  // Auto tour on arrival: step through the views every 2.5 s until the visitor drags, zooms, scrolls, taps or picks a view.
+  const tourOrder = ['overview', 'back', 'deck', 'entry', 'front', 'plan'];
+  const hint = viewer.querySelector('.hint'), hintText = hint.textContent;
+  let tourTimer = null, tourIdx = 0;
+  function stopTour() {
+    if (!tourTimer) return;
+    clearInterval(tourTimer); tourTimer = null; hint.textContent = hintText;
+  }
+  if (!reduce) {
+    hint.textContent = 'Touring the views · drag, scroll or tap to take over';
+    tourTimer = setInterval(() => { tourIdx = (tourIdx + 1) % tourOrder.length; go(tourOrder[tourIdx]); }, 2500);
+    controls.addEventListener('start', stopTour);
+    ['wheel', 'pointerdown', 'touchstart', 'keydown'].forEach(ev => renderer.domElement.addEventListener(ev, stopTour, { passive: true }));
+    document.querySelectorAll('.toolbar button, .toggles input').forEach(el => el.addEventListener('click', stopTour));
+    window.addEventListener('scroll', stopTour, { passive: true });
+  }
+
   function resize() {
     const w = viewer.clientWidth, h = viewer.clientHeight;
     renderer.setSize(w, h, false); camera.aspect = w / h; camera.fov = camera.aspect < 1 ? 62 : 42; camera.updateProjectionMatrix();
